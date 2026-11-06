@@ -21,6 +21,7 @@ from typing import Any
 import structlog
 
 from autocad_mcp.backends.base import AutoCADBackend, BackendCapabilities, CommandResult
+from autocad_mcp.backends.com_ops import COMOperationsMixin
 from autocad_mcp.config import get_cad_config, get_supported_cads
 
 log = structlog.get_logger()
@@ -66,7 +67,7 @@ COLOR_MAP: dict[str, int] = {
 # ---------------------------------------------------------------------------
 
 
-class COMBackend(AutoCADBackend):
+class COMBackend(COMOperationsMixin, AutoCADBackend):
     """COM / ActiveX backend for AutoCAD-compatible CAD applications."""
 
     def __init__(self) -> None:
@@ -418,8 +419,14 @@ class COMBackend(AutoCADBackend):
             if err_conn:
                 return err_conn
         try:
-            new_doc = self._app.Documents.Add()
+            new_doc = await self._com_retry(
+                lambda: self._app.Documents.Add(), label="Documents.Add"
+            )
             self._doc = new_doc
+            if not await self._await_document_ready(new_doc):
+                return CommandResult(
+                    ok=False, error="New document did not become COM-ready in time"
+                )
             self._msp = self._doc.ModelSpace
             return CommandResult(ok=True, payload={
                 "created": self._doc.Name,
@@ -433,8 +440,14 @@ class COMBackend(AutoCADBackend):
         if self._app is None:
             return CommandResult(ok=False, error="Not connected to any CAD application")
         try:
-            doc = self._app.Documents.Open(path)
+            doc = await self._com_retry(
+                lambda: self._app.Documents.Open(path), label="Documents.Open"
+            )
             self._doc = doc
+            if not await self._await_document_ready(doc):
+                return CommandResult(
+                    ok=False, error="Opened document did not become COM-ready in time"
+                )
             self._msp = self._doc.ModelSpace
             return CommandResult(ok=True, payload={
                 "opened": self._doc.FullName,
@@ -844,6 +857,9 @@ class COMBackend(AutoCADBackend):
             ent = self._get_entity_by_handle(entity_id)
             if ent is None:
                 return CommandResult(ok=False, error=f"Entity not found: {entity_id}")
+            # Collection Item() returns the base IAcadEntity interface; late
+            # binding exposes subtype properties (StartPoint, Radius, ...).
+            ent = self._dyn(ent)
 
             props: dict[str, Any] = {
                 "handle": ent.Handle,
@@ -1510,6 +1526,9 @@ class COMBackend(AutoCADBackend):
             ent = self._get_entity_by_handle(entity_id)
             if ent is None:
                 return CommandResult(ok=False, error=f"Entity not found: {entity_id}")
+            # Collection Item() returns the base IAcadEntity interface; late
+            # binding exposes subtype properties (StartPoint, Radius, ...).
+            ent = self._dyn(ent)
 
             props: dict[str, Any] = {
                 "handle": ent.Handle,

@@ -100,6 +100,9 @@ class AutoCADBackend(ABC):
     async def execute_lisp(self, code: str) -> CommandResult:
         return CommandResult(ok=False, error="Not supported on this backend")
 
+    async def send_command(self, command: str) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
     async def setup_lisp(self) -> CommandResult:
         return CommandResult(ok=False, error="Not supported on this backend")
 
