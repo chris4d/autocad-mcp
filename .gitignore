@@ -50,6 +50,7 @@ Thumbs.db
 
 # Log files
 *.log
+*.err
 
 # Claude Code
 .claude/
@@ -58,8 +59,11 @@ Thumbs.db
 claude_desktop_config.json
 
 # Local test files
-test_*.dwg
 temp_*.lsp
+
+# Drawings and generated corpus-audit output (see tools/dwg_scan3.py)
+*.dwg
+scan-results/
 
 # CTO Library (not included in repo)
 PIDv4-CTO/

@@ -86,6 +86,42 @@ Add to your MCP configuration:
 }
 ```
 
+### OpenCode Configuration
+
+The repo ships a project-scoped `opencode.jsonc`, so OpenCode connects the server
+automatically when this directory is the workspace. It launches the server
+through `uv` and defaults to the COM backend:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "autocad": {
+        "type": "local",
+        "command": ["uv", "--directory", ".", "run", "python", "-m", "autocad_mcp"],
+        "cwd": ".",
+        "environment": {
+          "AUTOCAD_MCP_BACKEND": "com",
+          "AUTOCAD_MCP_CAD_TYPE": "autocad"
+        }
+      }
+    }
+  }
+}
+```
+
+Verify the connection:
+
+```bash
+opencode mcp list
+# ✓ autocad  connected
+```
+
+Tools are exposed as `autocad_*`, or under `tools.autocad.*` when Code Mode is
+enabled (the default). Change `AUTOCAD_MCP_BACKEND` to `file_ipc` for AutoCAD LT
+or `ezdxf` for headless use.
+
 ### File IPC Backend Setup
 
 For AutoCAD LT, load the LISP dispatcher:
@@ -93,6 +129,22 @@ For AutoCAD LT, load the LISP dispatcher:
 1. Open AutoCAD LT
 2. In the command line, type: `(load "/path/to/autocad-mcp/lisp-code/mcp_dispatch.lsp")`
 3. The MCP server will automatically detect the running AutoCAD instance
+
+## DWG Corpus Audit (dev tool)
+
+Two standalone scripts in `tools/` triage a folder of DWGs before linking them into Revit. The checks cover the usual causes of "the imported geometry looks wrong" / link warnings: far-from-origin geometry, non-zero z-spread, ambiguous `INSUNITS`, hatches, unresolved xrefs, and proxy/3D/raster/OLE entities.
+
+**Requirements:** Windows, full AutoCAD (not LT — no COM server), `pywin32`. Drawings are opened read-only and closed without saving. AutoCAD is reused if already running, otherwise launched; if it stops answering COM the scanner kills and relaunches it, so don't point it at a session with unsaved work.
+
+```bash
+# Scan a folder tree (recursive, smallest first, resumable)
+uv run python tools/dwg_scan3.py "C:/path/to/drawings" --limit 50 --out scan-results
+
+# Summarise the results
+uv run python tools/aggregate_corpus.py scan-results
+```
+
+Each drawing produces `<name>.scan.json` (units, extents, distance from origin, z-spread, entity census, hatch and xref detail). `aggregate_corpus.py` prints the triage counts and writes `_corpus_summary.json`. `scan-results/` is git-ignored: it is regenerable output and embeds absolute client paths. Set `ACAD_EXE` to override AutoCAD discovery.
 
 ## Architecture
 

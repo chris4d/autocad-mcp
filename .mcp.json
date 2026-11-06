@@ -2,7 +2,7 @@
   "mcpServers": {
     "autocad": {
       "command": "uv",
-      "args": ["--directory", "F:/autocad-mcp/autocad-mcp", "run", "python", "-m", "autocad_mcp"],
+      "args": ["--directory", ".", "run", "python", "-m", "autocad_mcp"],
       "env": {
         "AUTOCAD_MCP_BACKEND": "com",
         "AUTOCAD_MCP_CAD_TYPE": "autocad"

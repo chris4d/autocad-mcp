@@ -71,7 +71,7 @@ The LISP setup is a **2,600-line AutoLISP file** (`lisp-code/mcp_dispatch.lsp`) 
 | Method | Steps |
 |--------|-------|
 | **Automatic (recommended)** | Run `setup.bat` — registers the LISP in AutoCAD's Startup Suite via Windows Registry, loads automatically on every AutoCAD start |
-| **Manual** | In AutoCAD command line: `(load "F:/autocad-mcp/autocad-mcp/lisp-code/mcp_dispatch.lsp")` |
+| **Manual** | In AutoCAD command line: `(load "C:/path/to/autocad-mcp/lisp-code/mcp_dispatch.lsp")` |
 | **APPLOAD dialog** | `APPLOAD` in AutoCAD → browse to `lisp-code/mcp_dispatch.lsp` → Add to Startup Suite |
 
 Once the LISP is loaded and you switch to File IPC, all currently "unsupported" features unlock: geometry calculations, all annotation types, modify/select/validate tools, layout management, xref, BOM export, electrical, P&ID, and MagiCAD — all while still working in your live AutoCAD session.
@@ -179,7 +179,7 @@ After this, the LISP loads automatically every time AutoCAD starts.
 #### Option B — Manual one-time load
 In AutoCAD's command line, type:
 ```lisp
-(load "F:/autocad-mcp/autocad-mcp/lisp-code/mcp_dispatch.lsp")
+(load "C:/path/to/autocad-mcp/lisp-code/mcp_dispatch.lsp")
 ```
 
 #### Option C — APPLOAD dialog

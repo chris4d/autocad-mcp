@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "autocad": {
+        "type": "local",
+        "command": ["uv", "--directory", ".", "run", "python", "-m", "autocad_mcp"],
+        "cwd": ".",
+        "environment": {
+          "AUTOCAD_MCP_BACKEND": "com",
+          "AUTOCAD_MCP_CAD_TYPE": "autocad",
+          "AUTOCAD_MCP_IPC_TIMEOUT": "30.0",
+          "AUTOCAD_MCP_ONLY_TEXT": "false"
+        }
+      }
+    }
+  }
+}
