@@ -1,0 +1,51 @@
+name: release-bundle
+
+# Builds the self-contained Windows x64 bundle consumed by the SMS Toolkit
+# suite. The suite pins a tag and stages autocad-mcp-v<version>-win64.zip.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (defaults to pyproject.toml)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Build bundle
+        shell: pwsh
+        run: |
+          $v = if ('${{ github.event_name }}' -eq 'push') { '${{ github.ref_name }}' } else { '${{ github.event.inputs.version }}' }
+          if ($v) { .\packaging\build-bundle.ps1 -Version $v } else { .\packaging\build-bundle.ps1 }
+
+      - name: Checksums
+        shell: pwsh
+        run: Get-FileHash dist/*.zip | Format-Table -AutoSize
+
+      - name: Publish release (tag push)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/autocad-mcp-v*-win64.zip
+            dist/autocad-mcp-v*-win64.zip.sha256
+
+      - name: Upload bundle (manual runs)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: autocad-mcp-bundle
+          path: |
+            dist/autocad-mcp-v*-win64.zip
+            dist/autocad-mcp-v*-win64.zip.sha256
